@@ -1,2 +1,4 @@
 *~
 a.out
+.rust/
+rust-project.json

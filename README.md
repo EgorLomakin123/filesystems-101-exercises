@@ -12,6 +12,8 @@ must be implemented in `solution.c`. You may create additional source
 files if needed.. A file named `main.c` invokes a solution. You may
 modify it to run more tests of your own choice.
 
+Some problems can also be solved in Rust; see [RUST.md](RUST.md).
+
 ## How to work with this repository
 
 1. Clone it,
