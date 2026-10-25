@@ -6,50 +6,9 @@
 #include <stdlib.h>
 
 /*
-SYNOPSIS
-       #include <dirent.h>
-
-       struct dirent *readdir(DIR *dirp);
-
-
 executable: /proc/pid/exe
 args: /proc/pid/cmdline
 env_variables: /proc/pid/environ 
-
-to check if name is a number: atoi()
-
-need a funciton to parse environment variables
-need a function to parse command line arguments
-need a function to parse executable path
-
- // Pointer array + data buffer in one allocation.
-    char **result = malloc(
-        (count + 1) * sizeof(*result) + n + 1
-    );
-
-    if (result == NULL) {
-        free(buffer);
-        return NULL;
-    }
-
-    char *data = (char *)(result + count + 1);
-    memcpy(data, buffer, n + 1);
-    free(buffer);
-
-    if (count > 0) {
-        result[0] = data;
-
-        size_t j = 1;
-        for (size_t i = 0; i < n; i++) {
-            if (data[i] == '\0' && i + 1 < n) {
-                result[j++] = &data[i + 1];
-            }
-        }
-    }
-
-    result[count] = NULL;
-    return result;
-}
 */
 const int FILEPATH_MAX_SIZE = 4096;
 
@@ -105,6 +64,7 @@ char** get_splited_data(const char* path)
        {
               char** empty = malloc(sizeof(char*));
               empty[0] = NULL;
+              free(buffer);
               return empty;
        }
 
@@ -113,6 +73,7 @@ char** get_splited_data(const char* path)
        memcpy(data, buffer, n + 1);
        if (file_size == 0)
        {
+              free(buffer);
               return result;
        }
        int j = 0;
@@ -124,6 +85,7 @@ char** get_splited_data(const char* path)
                      result[++j] = &data[i + 1];
               }
        }
+       free(buffer);
        result[amount_of_strings] = NULL;
        return result;
 }
