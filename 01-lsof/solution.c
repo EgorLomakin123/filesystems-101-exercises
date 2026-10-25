@@ -52,6 +52,7 @@ void lsof(void)
 			target_path[len] = '\0';
 			report_file(target_path);
 		}
+		closedir(fd_dir);
 	}
 	closedir(dir);
 }
