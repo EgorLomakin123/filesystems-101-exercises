@@ -51,7 +51,7 @@ int copy(int in, int out)
 	int uring_init_res = io_uring_queue_init(URING_ENTRIES, &ring, 0);
 	if (uring_init_res != 0 )
 	{
-		return_code = -uring_init_res;
+		return_code = uring_init_res;
 		goto out_only_free_buffers;
 	}
 	struct io_uring_sqe* sqe;
@@ -71,7 +71,7 @@ int copy(int in, int out)
 	int uring_submit_res = io_uring_submit(&ring);
 	if (uring_submit_res != prepared_operations)
 	{
-		return_code = -uring_submit_res;
+		return_code = uring_submit_res;
 		goto out;
 	}
 	prepared_operations = 0;
@@ -81,7 +81,7 @@ int copy(int in, int out)
 		int uring_wait_res = io_uring_wait_cqe(&ring, &cqe);
 		if (uring_wait_res != 0)
 		{
-			return_code = -uring_wait_res;
+			return_code = uring_wait_res;
 			goto out;
 		}
 
@@ -92,7 +92,7 @@ int copy(int in, int out)
 			int buffer_index = (int)(intptr_t)io_uring_cqe_get_data(cqes[i]);
 			if (cqes[i]->res < 0)
 			{
-				return_code = -cqes[i]->res;
+				return_code = cqes[i]->res;
 				goto out;
 			}
 			if (buffer_states[buffer_index].status == BUFFER_STATE_READING)
@@ -138,7 +138,7 @@ int copy(int in, int out)
 		int uring_submit_res = io_uring_submit(&ring);
 		if (uring_submit_res != prepared_operations)
 		{
-			return_code = -uring_submit_res;
+			return_code = uring_submit_res;
 			goto out;
 		}
 		prepared_operations = 0;
