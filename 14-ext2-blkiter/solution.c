@@ -262,13 +262,13 @@ int ext2_blkiter_init(struct ext2_blkiter **i, struct ext2_fs *fs, int ino)
 	struct ext2_blkiter* new_iter = fs_xmalloc(sizeof(struct ext2_blkiter));
 	*i = new_iter;
 	new_iter->fs = fs;
+	new_iter->inode = fs_xmalloc(sizeof(struct ext2_inode));
 	int r = ext2_read_inode(fs, ino, new_iter->inode);
 	if (r < 0)
 	{
 		ext2_blkiter_free(new_iter);
 		return r;
 	}
-	new_iter->inode = fs_xmalloc(sizeof(struct ext2_inode));
 	new_iter->max_pointers_in_block = fs->block_size / sizeof(__le32);
 	new_iter->blocks_to_read = new_iter->inode->size / fs->block_size;
 	if (new_iter->inode->size % fs->block_size != 0)
