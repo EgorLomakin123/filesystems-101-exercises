@@ -125,7 +125,7 @@ int ext2_read_superblock(struct ext2_superblock *sb, int fd)
 // group - 0 based
 int ext2_read_blockgroup_descriptor(struct ext2_fs *fs, __le32 group, struct ext2_blockgroup_descriptor *bgd)
 {
-	unsigned long bgd_offset = BOOT_BLOCK_SIZE + calculate_blockgroup_offset(fs, group) + SUPERBLOCK_SIZE;
+	unsigned long bgd_offset = calculate_blockgroup_offset(fs, group);
 	int r = pread(fs->fd, bgd, sizeof(struct ext2_blockgroup_descriptor), bgd_offset);
 	if (r < 0)
 	{
@@ -175,7 +175,7 @@ int ext2_read_inode(struct ext2_fs *fs, int ino, struct ext2_inode *inode)
 	int r = ext2_check_inode_in_use(fs, group, inode_index_in_group);
 	if (r < 0)
 	{
-		return -r;
+		return r;
 	}
 	unsigned long inode_table_offset = fs->bgds[group].inode_table_address * fs->block_size;
 	__le16 inode_size = fs->sb.inode_size;
@@ -212,6 +212,9 @@ int ext2_read_block(struct ext2_fs *fs, __le32 block, void *buf)
 int ext2_fs_init(struct ext2_fs **fs, int fd)
 {
 	struct ext2_fs* new_fs = fs_xmalloc(sizeof(struct ext2_fs));
+	*fs = new_fs;
+	new_fs->fd = fd;
+	new_fs->bgds = NULL;
 	struct ext2_superblock *sb = &new_fs->sb;
 	int r = ext2_read_superblock(sb, fd);
 	if (r < 0)
@@ -236,9 +239,6 @@ int ext2_fs_init(struct ext2_fs **fs, int fd)
 			return r;
 		}
 	}
-	*fs = new_fs;
-	new_fs->fd = fd;
-	new_fs->bgds = NULL;
 	return 0;
 }
 
@@ -260,13 +260,14 @@ void ext2_fs_free(struct ext2_fs *fs)
 int ext2_blkiter_init(struct ext2_blkiter **i, struct ext2_fs *fs, int ino)
 {
 	struct ext2_blkiter* new_iter = fs_xmalloc(sizeof(struct ext2_blkiter));
+	*i = new_iter;
+	new_iter->fs = fs;
 	int r = ext2_read_inode(fs, ino, new_iter->inode);
 	if (r < 0)
 	{
+		ext2_blkiter_free(new_iter);
 		return r;
 	}
-	*i = new_iter;
-	new_iter->fs = fs;
 	new_iter->inode = fs_xmalloc(sizeof(struct ext2_inode));
 	new_iter->max_pointers_in_block = fs->block_size / sizeof(__le32);
 	new_iter->blocks_to_read = new_iter->inode->size / fs->block_size;
