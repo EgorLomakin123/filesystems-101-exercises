@@ -36,7 +36,6 @@ int dump_file(int img, int inode_nr, int out)
 		r = ext2_blkiter_next(i, &blkno);
 		if (r < 0)
 		{
-			r = -errno;
 			goto out;
 		}
 		if (r == 0)
@@ -46,9 +45,9 @@ int dump_file(int img, int inode_nr, int out)
 
 		unsigned long blk_offset = calculate_block_offset_by_block_number(fs, blkno);
 		size_t read_size = block_size;
-		if (size_to_read < block_size)
+		if (size_to_read < block_size + write_offset)
 		{
-			read_size = size_to_read;
+			read_size = size_to_read - write_offset;
 		}
 
 		r = pread(img, buff, read_size, blk_offset);
@@ -57,11 +56,9 @@ int dump_file(int img, int inode_nr, int out)
 			r = -errno;
 			goto out;
 		}
-
-		size_to_read -= block_size;
 		size_t write_size = r;
 		
-		r = pwrite(img, buff, write_size, write_offset);
+		r = pwrite(out, buff, write_size, write_offset);
 		if (r < 0)
 		{
 			r = -errno;
