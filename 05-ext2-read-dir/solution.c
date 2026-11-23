@@ -3,6 +3,8 @@
 #include <ext2_blkiter.h>
 #include <errno.h>
 #include <string.h>
+#include <fs_malloc.h>
+#include <unistd.h>
 
 #define DIR_ENTRY_SIZE_NO_NAME sizeof(__le32) + sizeof(__le16) + sizeof(__u8) * 2
 #define DIR_ENTRY_TYPE_FILE 'f'
@@ -42,7 +44,7 @@ int dump_dir(int img, int inode_nr)
 		return -errno;
 	}
 
-	unsigned long block_size = ext2_fs_get_block_size(fs);
+	unsigned int block_size = ext2_fs_get_block_size(fs);
 	unsigned long size_to_read = ext2_blkiter_get_file_size(i);
 	void *buff = fs_xmalloc(block_size);
 
@@ -68,7 +70,7 @@ int dump_dir(int img, int inode_nr)
 			goto out;
 		}
 
-		int entry_offset = 0;
+		unsigned int entry_offset = 0;
 		while (entry_offset < block_size)
 		{
 			parse_directory_entry(buff, entry_offset, &dir_entry);

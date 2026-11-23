@@ -58,7 +58,7 @@ void ext2_blkiter_free(struct ext2_blkiter *i);
 
 
 
-unsigned long ext2_fs_get_block_size(struct ext2_fs *fs);
+unsigned int ext2_fs_get_block_size(struct ext2_fs *fs);
 
 unsigned int ext2_fs_get_blocks_per_group(struct ext2_fs *fs);
 

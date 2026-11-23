@@ -103,19 +103,19 @@ unsigned long calculate_block_offset(struct ext2_fs *fs, __le32 block_group, __l
 	return block_offset;
 }
 
-unsigned long ext2_fs_get_block_size(struct ext2_fs *fs)
+unsigned int ext2_fs_get_block_size(struct ext2_fs *fs)
 {
-    return fs->block_size;
+    return (unsigned int)fs->block_size;
 }
 
 unsigned int ext2_fs_get_blocks_per_group(struct ext2_fs *fs)
 {
-    return fs->sb.blocks_per_group;
+    return (unsigned int)fs->sb.blocks_per_group;
 }
 
 unsigned long ext2_blkiter_get_file_size(struct ext2_blkiter *i)
 {
-    return i->inode->size;
+    return (unsigned long)i->inode->size;
 }
 
 unsigned long calculate_block_offset_by_block_number(struct ext2_fs *fs, unsigned int blkno)
