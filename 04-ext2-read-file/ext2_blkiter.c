@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <linux/types.h>
-#include <linux/byteorder/little_endian.h>
 #include <stdbool.h>
 #include <fs_malloc.h>
 #include <unistd.h>
