@@ -6,11 +6,6 @@
 
 int dump_file(int img, int inode_nr, int out)
 {
-	(void) img;
-	(void) inode_nr;
-	(void) out;
-
-	/* implement me */
 	int r;
 	struct ext2_fs *fs = NULL;
 	struct ext2_blkiter *i = NULL;
