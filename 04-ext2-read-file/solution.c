@@ -13,13 +13,13 @@ int dump_file(int img, int inode_nr, int out)
 
 	if ((r = ext2_fs_init(&fs, dup(img))))
 	{
-		return -errno;
+		return r;
 	}
 		
 	if ((r = ext2_blkiter_init(&i, fs, inode_nr)))
 	{
 		ext2_fs_free(fs);
-		return -errno;
+		return r;
 	}
 
 	unsigned long block_size = ext2_fs_get_block_size(fs);

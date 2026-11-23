@@ -9,6 +9,7 @@
 #define DIR_ENTRY_SIZE_NO_NAME sizeof(__le32) + sizeof(__le16) + sizeof(__u8) * 2
 #define DIR_ENTRY_TYPE_FILE 'f'
 #define DIR_ENTRY_TYPE_DIR 'd'
+#define DIR_ENTRY_MAXIMAL_NAME_LENGTH 2^8
 
 struct directory_entry
 {
@@ -24,6 +25,7 @@ void parse_directory_entry(void *buffer, int entry_offset, struct directory_entr
 {
 	memcpy(&entry->inode, buffer + entry_offset, DIR_ENTRY_SIZE_NO_NAME);
 	memcpy(&entry->name, buffer + entry_offset + DIR_ENTRY_SIZE_NO_NAME, entry->name_length);
+
 }
 
 int dump_dir(int img, int inode_nr)
@@ -31,25 +33,25 @@ int dump_dir(int img, int inode_nr)
 	int r;
 	struct ext2_fs *fs = NULL;
 	struct ext2_blkiter *i = NULL;
-	unsigned long write_offset = 0;
 
 	if ((r = ext2_fs_init(&fs, dup(img))))
 	{
-		return -errno;
+		return r;
 	}
 		
 	if ((r = ext2_blkiter_init(&i, fs, inode_nr)))
 	{
 		ext2_fs_free(fs);
-		return -errno;
+		return r;
 	}
 
 	unsigned int block_size = ext2_fs_get_block_size(fs);
 	unsigned long size_to_read = ext2_blkiter_get_file_size(i);
 	void *buff = fs_xmalloc(block_size);
+	int blocks_read = 0;
 
 	int blkno;
-	struct directory_entry dir_entry;
+	struct directory_entry *dir_entry = malloc(DIR_ENTRY_SIZE_NO_NAME+DIR_ENTRY_MAXIMAL_NAME_LENGTH);
 	while ((r = ext2_blkiter_next(i, &blkno)) != 0) {
 		if (r < 0)
 		{
@@ -58,9 +60,9 @@ int dump_dir(int img, int inode_nr)
 
 		unsigned long blk_offset = calculate_block_offset_by_block_number(fs, blkno);
 		size_t read_size = block_size;
-		if (size_to_read < block_size + write_offset)
+		if (size_to_read < (unsigned long)block_size * (blocks_read + 1))
 		{
-			read_size = size_to_read - write_offset;
+			read_size = size_to_read - (unsigned long)block_size * blocks_read;
 		}
 
 		r = pread(img, buff, read_size, blk_offset);
@@ -69,19 +71,20 @@ int dump_dir(int img, int inode_nr)
 			r = -errno;
 			goto out;
 		}
+		blocks_read++;
 
 		unsigned int entry_offset = 0;
 		while (entry_offset < block_size)
 		{
-			parse_directory_entry(buff, entry_offset, &dir_entry);
-			entry_offset += DIR_ENTRY_SIZE_NO_NAME + dir_entry.name_length;
-			const char* name = dir_entry.name;
-			if (dir_entry.file_type == 1 && dir_entry.inode != 0)
+			parse_directory_entry(buff, entry_offset, dir_entry);
+			entry_offset += dir_entry->size;
+			const char* name = dir_entry->name;
+			if (dir_entry->file_type == 1 && dir_entry->inode != 0)
 			{
-				report_file(dir_entry.inode, DIR_ENTRY_TYPE_FILE, name);
-			} else if (dir_entry.file_type == 2 && dir_entry.inode != 0)
+				report_file(dir_entry->inode, DIR_ENTRY_TYPE_FILE, name);
+			} else if (dir_entry->file_type == 2 && dir_entry->inode != 0)
 			{
-				report_file(dir_entry.inode, DIR_ENTRY_TYPE_DIR, name);
+				report_file(dir_entry->inode, DIR_ENTRY_TYPE_DIR, name);
 			}
 		}
 	}
