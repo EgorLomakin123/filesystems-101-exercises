@@ -55,3 +55,13 @@ int ext2_blkiter_next(struct ext2_blkiter *i, int *blkno);
    Note: ext2_blkiter_free(NULL) is a no-op.
  */
 void ext2_blkiter_free(struct ext2_blkiter *i);
+
+
+
+unsigned long ext2_fs_get_block_size(struct ext2_fs *fs);
+
+unsigned int ext2_fs_get_blocks_per_group(struct ext2_fs *fs);
+
+unsigned long ext2_blkiter_get_file_size(struct ext2_blkiter *i);
+
+unsigned long calculate_block_offset_by_block_number(struct ext2_fs *fs, unsigned int blkno);

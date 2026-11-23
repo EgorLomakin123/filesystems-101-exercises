@@ -2,6 +2,7 @@
 #include <ext2_blkiter.h>
 #include <fs_malloc.h>
 #include <errno.h>
+#include <unistd.h>
 
 int dump_file(int img, int inode_nr, int out)
 {
@@ -15,12 +16,12 @@ int dump_file(int img, int inode_nr, int out)
 	struct ext2_blkiter *i = NULL;
 	unsigned long write_offset = 0;
 
-	if (r = ext2_fs_init(&fs, dup(img)))
+	if ((r = ext2_fs_init(&fs, dup(img))))
 	{
 		return -errno;
 	}
 		
-	if (r = ext2_blkiter_init(&i, fs, inode_nr))
+	if ((r = ext2_blkiter_init(&i, fs, inode_nr)))
 	{
 		ext2_fs_free(fs);
 		return -errno;
@@ -28,7 +29,6 @@ int dump_file(int img, int inode_nr, int out)
 
 	unsigned long block_size = ext2_fs_get_block_size(fs);
 	unsigned long size_to_read = ext2_blkiter_get_file_size(i);
-	unsigned int blocks_per_group = ext2_fs_get_blocks_per_group(fs);
 	int *buff = fs_xmalloc(block_size);
 
 	for (;;) {
@@ -41,13 +41,10 @@ int dump_file(int img, int inode_nr, int out)
 		}
 		if (r == 0)
 		{
-			r = -errno;
 			goto out;
 		}
-		unsigned int blk_number = blkno / blocks_per_group;
-		unsigned int blk_index = blkno % blocks_per_group;
-		unsigned long blk_offset = calculate_block_offset(fs, blk_number, blk_index);
 
+		unsigned long blk_offset = calculate_block_offset_by_block_number(fs, blkno);
 		size_t read_size = block_size;
 		if (size_to_read < block_size)
 		{

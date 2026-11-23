@@ -119,6 +119,15 @@ unsigned long ext2_blkiter_get_file_size(struct ext2_blkiter *i)
     return i->inode->size;
 }
 
+unsigned long calculate_block_offset_by_block_number(struct ext2_fs *fs, unsigned int blkno)
+{
+    __le32 block_size = ext2_fs_get_blocks_per_group(fs);
+    __le32 block_group = blkno / block_size;
+    __le32 block_index = blkno % block_size;
+    return calculate_block_offset(fs, block_group, block_index);
+}
+
+
 
 int ext2_read_superblock(struct ext2_superblock *sb, int fd)
 {
