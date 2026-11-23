@@ -6,10 +6,11 @@
 #include <fs_malloc.h>
 #include <unistd.h>
 
-#define DIR_ENTRY_SIZE_NO_NAME sizeof(__le32) + sizeof(__le16) + sizeof(__u8) * 2
+#define DIR_ENTRY_SIZE_NO_NAME (sizeof(__le32) + sizeof(__le16) + sizeof(__u8) * 2)
 #define DIR_ENTRY_TYPE_FILE 'f'
 #define DIR_ENTRY_TYPE_DIR 'd'
-#define DIR_ENTRY_MAXIMAL_NAME_LENGTH 2^8
+#define DIR_ENTRY_MAXIMAL_NAME_LENGTH 256
+#define END_OF_NAME '\0'
 
 struct directory_entry
 {
@@ -51,7 +52,7 @@ int dump_dir(int img, int inode_nr)
 	int blocks_read = 0;
 
 	int blkno;
-	struct directory_entry *dir_entry = malloc(DIR_ENTRY_SIZE_NO_NAME+DIR_ENTRY_MAXIMAL_NAME_LENGTH);
+	struct directory_entry *dir_entry = fs_xmalloc(DIR_ENTRY_SIZE_NO_NAME + DIR_ENTRY_MAXIMAL_NAME_LENGTH + 1);
 	while ((r = ext2_blkiter_next(i, &blkno)) != 0) {
 		if (r < 0)
 		{
@@ -78,6 +79,7 @@ int dump_dir(int img, int inode_nr)
 		{
 			parse_directory_entry(buff, entry_offset, dir_entry);
 			entry_offset += dir_entry->size;
+			dir_entry->name[dir_entry->name_length] = END_OF_NAME;
 			const char* name = dir_entry->name;
 			if (dir_entry->file_type == 1 && dir_entry->inode != 0)
 			{
@@ -90,6 +92,7 @@ int dump_dir(int img, int inode_nr)
 	}
 
 out:
+	fs_xfree(dir_entry);
 	fs_xfree(buff);
 	ext2_blkiter_free(i);
 	ext2_fs_free(fs);
